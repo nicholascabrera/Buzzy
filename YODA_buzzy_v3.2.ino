@@ -48,11 +48,13 @@ class Buzzy                         //allows motor to vibrate on/off while the l
   //these mantain the current state
   int buzzyState;                   //buzzyState used to set the motor
   unsigned long previousMillis;     //will store the last time Buzzy was updated
+  
+  float measuredvbat;
 
   // constructor - creates a Buzzy
   // and initializes the member variables and state
   public:
-  Buzzy(int pin, long on, long off)
+  Buzzy(int pin, long on, long off, float bV)
   {
     buzzyPin = pin;
     pinMode(buzzyPin, OUTPUT);
@@ -62,13 +64,19 @@ class Buzzy                         //allows motor to vibrate on/off while the l
 
     buzzyState = LOW;
     previousMillis = 0;
+
+    measuredvbat = bV;
+  }
+
+  void BatteryCheck(float bV)
+  {
+    measuredvbat = bV;
   }
 
   void Update()
   {
     // check to see if it is time to change the state of the Buzzy
     unsigned long currentMillis = millis();
-    float measuredvbat;
 
     if ((buzzyState == HIGH) && (currentMillis - previousMillis >= OnTime))
     {
@@ -79,13 +87,11 @@ class Buzzy                         //allows motor to vibrate on/off while the l
 
     else if ((buzzyState == LOW) && (currentMillis - previousMillis >= OffTime))
     {
-      measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
       buzzyState = HIGH;                    // turn on the buzzy
       previousMillis = currentMillis;       // remember the time
       digitalWrite(buzzyPin, buzzyState);   // update the buzzy
     }
 
-    
     if(measuredvbat >= 4) {
       strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
     } else if(measuredvbat >= 3.65 && measuredvbat < 4) {
@@ -96,6 +102,7 @@ class Buzzy                         //allows motor to vibrate on/off while the l
 
     strip.show();                         // turns on the NeoPixel
   }
+
 
 };  // end class definition
 
@@ -113,13 +120,13 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
   //these mantain the current state
   int buzzyState;                   //buzzyState used to set the motor
   unsigned long previousMillis;     //will store the last time Buzzy was updated
-    
-  float measuredvbat;
+
+  float measuredvbat;               //measure battery voltage
 
   // constructor - creates a Buzzy
   // and initializes the member variables and state
   public:
-  Buzzy2(int pin, long on, long off)
+  Buzzy2(int pin, long on, long off, float bV)
   {
     buzzyPin = pin;
     pinMode(buzzyPin, OUTPUT);
@@ -129,15 +136,19 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
 
     buzzyState = LOW;
     previousMillis = 0;
+    
+    measuredvbat = bV;
+  }
+
+  void BatteryCheck(float bV)
+  {
+    measuredvbat = bV;
   }
 
   void Update()
   {
     // check to see if it is time to change the state of the Buzzy
     unsigned long currentMillis = millis();
-
-    // measure the battery voltage
-    float measuredvbat;
     
     if ((buzzyState == HIGH) && (currentMillis - previousMillis >= OnTime))
     {
@@ -151,10 +162,9 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
     {
       buzzyState = HIGH;                    // turn on the buzzy
       previousMillis = currentMillis;       // remember the time
-      
       if(measuredvbat >= 4) {
         strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
-    } else if(measuredvbat >= 3.65 && measuredvbat < 4) {
+      }else if(measuredvbat >= 3.65 && measuredvbat < 4) {
         strip.setPixelColor(0,255,255,0);       // makes the NeoPixel "yellow"
       }else{
         strip.setPixelColor(0,150,0,0);       // makes the NeoPixel "red"
@@ -188,11 +198,13 @@ unsigned long timeout1 = 5000;            // timeout after (milliseconds)
 unsigned long timeout2 = 30000;
 unsigned long start;                      // used as the "start" for the timer
 
+// measure the battery voltage
+float measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
 
 //------------------------------------------------------------------------------------------
 
-Buzzy motor1(5,200,100);                   //sets motor pin to "5" with "on" and "off" times (milliseconds)
-Buzzy2 motor2(5,100,1900);
+Buzzy motor1(5,200,100, measuredvbat);                   //sets motor pin to "5" with "on" and "off" times (milliseconds)
+Buzzy2 motor2(5,100,1900, measuredvbat);
 
 //------------------------------------------------------------------------------------------
 
@@ -230,6 +242,9 @@ void loop()
   {
     // reset the debouncing timer
     lastDebounceTime = millis();
+    measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
+    motor1.BatteryCheck(measuredvbat);
+    motor2.BatteryCheck(measuredvbat);
     
       // toggles the systemState variable each time the button is pressed 
       if (buttonState == LOW) 
