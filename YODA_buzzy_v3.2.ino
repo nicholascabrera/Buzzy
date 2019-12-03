@@ -1,4 +1,3 @@
-
 /*
  * -----------------------------------------------------------------------
  * YODA "Buzzy" Program
@@ -20,6 +19,9 @@
  
 // How many NeoPixels are attached to the Arduino?
 #define LED_COUNT 1
+
+// Find battery voltage/level
+#define VBATPIN A7
  
 // Declare our NeoPixel strip object:
 Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
@@ -66,6 +68,7 @@ class Buzzy                         //allows motor to vibrate on/off while the l
   {
     // check to see if it is time to change the state of the Buzzy
     unsigned long currentMillis = millis();
+    float measuredvbat;
 
     if ((buzzyState == HIGH) && (currentMillis - previousMillis >= OnTime))
     {
@@ -76,12 +79,21 @@ class Buzzy                         //allows motor to vibrate on/off while the l
 
     else if ((buzzyState == LOW) && (currentMillis - previousMillis >= OffTime))
     {
+      measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
       buzzyState = HIGH;                    // turn on the buzzy
       previousMillis = currentMillis;       // remember the time
       digitalWrite(buzzyPin, buzzyState);   // update the buzzy
     }
 
-    strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
+    
+    if(measuredvbat >= 4) {
+      strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
+    } else if(measuredvbat >= 3.65 && measuredvbat < 4) {
+      strip.setPixelColor(0,255,255,0);       // makes the NeoPixel "yellow"
+    }else{
+      strip.setPixelColor(0,150,0,0);
+    }
+
     strip.show();                         // turns on the NeoPixel
   }
 
@@ -101,6 +113,8 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
   //these mantain the current state
   int buzzyState;                   //buzzyState used to set the motor
   unsigned long previousMillis;     //will store the last time Buzzy was updated
+    
+  float measuredvbat;
 
   // constructor - creates a Buzzy
   // and initializes the member variables and state
@@ -122,6 +136,9 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
     // check to see if it is time to change the state of the Buzzy
     unsigned long currentMillis = millis();
 
+    // measure the battery voltage
+    float measuredvbat;
+    
     if ((buzzyState == HIGH) && (currentMillis - previousMillis >= OnTime))
     {
       buzzyState = LOW;                     // turn off the buzzy
@@ -134,13 +151,21 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
     {
       buzzyState = HIGH;                    // turn on the buzzy
       previousMillis = currentMillis;       // remember the time
-      strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
+      
+      if(measuredvbat >= 4) {
+        strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
+    } else if(measuredvbat >= 3.65 && measuredvbat < 4) {
+        strip.setPixelColor(0,255,255,0);       // makes the NeoPixel "yellow"
+      }else{
+        strip.setPixelColor(0,150,0,0);       // makes the NeoPixel "red"
+      }
       strip.show();                         // turns on the NeoPixel
       digitalWrite(buzzyPin, buzzyState);   // update the buzzy
     }
   }
 
 };  // end class definition
+
 
 //------------------------------------------------------------------------------------------
 
@@ -185,6 +210,12 @@ void setup()
 } // close setup
 
 //-------------------------------------------------------------------------------------------
+
+
+long BatteryCheck()
+{
+  
+}
 
 void loop() 
 {
@@ -257,35 +288,4 @@ void loop()
 } // end loop
 
 //--------------------------------------------------------------------------------
-
-// 0 to 255
-void brighten() 
-{
-  uint16_t i, j;
-
-  for (j = 0; j < 255; j++) {
-    for (i = 0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, 0, j, 0);
-    }
-    strip.show();
-    delay(10);
-  }
-}
-
-//--------------------------------------------------------------------------------
-
-// 255 to 0
-void darken() 
-{
-  uint16_t i, j;
-
-  for (j = 255; j > 0; j--) {
-    for (i = 0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, 0, j, 0);
-    }
-    strip.show();
-    delay(10);
-  }
-}
-
 //end program
