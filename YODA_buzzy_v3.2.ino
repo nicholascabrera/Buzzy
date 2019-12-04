@@ -49,7 +49,7 @@ class Buzzy                         //allows motor to vibrate on/off while the l
   int buzzyState;                   //buzzyState used to set the motor
   unsigned long previousMillis;     //will store the last time Buzzy was updated
   
-  float measuredvbat;
+  float measuredvbat;               //measure battery voltage
 
   // constructor - creates a Buzzy
   // and initializes the member variables and state
@@ -70,7 +70,7 @@ class Buzzy                         //allows motor to vibrate on/off while the l
 
   void BatteryCheck(float bV)
   {
-    measuredvbat = bV;
+    measuredvbat = bV; // updates the battery value for the class
   }
 
   void Update()
@@ -142,7 +142,7 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
 
   void BatteryCheck(float bV)
   {
-    measuredvbat = bV;
+    measuredvbat = bV; // updates the battery value for the class
   }
 
   void Update()
@@ -223,12 +223,6 @@ void setup()
 
 //-------------------------------------------------------------------------------------------
 
-
-long BatteryCheck()
-{
-  
-}
-
 void loop() 
 {
   // read the state of the switch into a local variable:
@@ -243,8 +237,8 @@ void loop()
     // reset the debouncing timer
     lastDebounceTime = millis();
     measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
-    motor1.BatteryCheck(measuredvbat);
-    motor2.BatteryCheck(measuredvbat);
+    motor1.BatteryCheck(measuredvbat); //updates the battery in mode 1
+    motor2.BatteryCheck(measuredvbat); //updates the battery in mode 2
     
       // toggles the systemState variable each time the button is pressed 
       if (buttonState == LOW) 
