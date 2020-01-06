@@ -1,9 +1,9 @@
 /*
  * -----------------------------------------------------------------------
  * "Buzzy" Program
- * version: 3.3
- * author: C P Althoff
- * date: 010-OCT-2019
+ * version: 3.4
+ * author: C P Althoff, Ethan Leigh, Nicholas Cabrera, Colette Guy
+ * today's date: 002-Jan-2020
  * 
  * board: Adafruit Feather M0 Express
  * 
@@ -12,6 +12,7 @@
 
 #include <Adafruit_NeoPixel.h>
 #include <EasyNeoPixels.h>
+//#include <ArduinoLowPower.h>
 
 
 // Which pin on the Arduino is connected to the NeoPixels?
@@ -34,7 +35,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_PIN, NEO_GRB + NEO_KHZ800);
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 
-//-----------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 
 class Buzzy                         //allows motor to vibrate on/off while the loop runs w/o delays
                                     //this class keeps the NeoPixel lit "solid" for the full duration
@@ -49,7 +50,7 @@ class Buzzy                         //allows motor to vibrate on/off while the l
   int buzzyState;                   //buzzyState used to set the motor
   unsigned long previousMillis;     //will store the last time Buzzy was updated
   
-  float measuredvbat;               //measure battery voltage
+  float measuredvbat;
 
   // constructor - creates a Buzzy
   // and initializes the member variables and state
@@ -70,7 +71,7 @@ class Buzzy                         //allows motor to vibrate on/off while the l
 
   void BatteryCheck(float bV)
   {
-    measuredvbat = bV; // updates the battery value for the class
+    measuredvbat = bV;
   }
 
   void Update()
@@ -92,9 +93,9 @@ class Buzzy                         //allows motor to vibrate on/off while the l
       digitalWrite(buzzyPin, buzzyState);   // update the buzzy
     }
 
-    if(measuredvbat >= 4) {
+    if(measuredvbat >= 3.65) {
       strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
-    } else if(measuredvbat >= 3.65 && measuredvbat < 4) {
+    } else if(measuredvbat >= 3.3 && measuredvbat < 3.65) {
       strip.setPixelColor(0,255,255,0);       // makes the NeoPixel "yellow"
     }else{
       strip.setPixelColor(0,150,0,0);
@@ -106,7 +107,7 @@ class Buzzy                         //allows motor to vibrate on/off while the l
 
 };  // end class definition
 
-//------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 
 class Buzzy2                         //allows motor to vibrate on/off while the loop runs w/o delays
                                      //this class version only blinks the NeoPixel when the motor is running
@@ -142,7 +143,7 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
 
   void BatteryCheck(float bV)
   {
-    measuredvbat = bV; // updates the battery value for the class
+    measuredvbat = bV;
   }
 
   void Update()
@@ -162,13 +163,69 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
     {
       buzzyState = HIGH;                    // turn on the buzzy
       previousMillis = currentMillis;       // remember the time
-      if(measuredvbat >= 4) {
+      if(measuredvbat >= 3.65) {
         strip.setPixelColor(0,0,150,0);       // makes the NeoPixel "green"
-      }else if(measuredvbat >= 3.65 && measuredvbat < 4) {
+      }else if(measuredvbat >= 3.3 && measuredvbat < 3.65) {
         strip.setPixelColor(0,255,255,0);       // makes the NeoPixel "yellow"
       }else{
-        strip.setPixelColor(0,150,0,0);       // makes the NeoPixel "red"
+        strip.setPixelColor(0,150,0,0);
       }
+      strip.show();                         // turns on the NeoPixel
+        digitalWrite(buzzyPin, buzzyState);   // update the buzzy
+      }
+  }
+
+};  // end class definition
+
+
+//----------------------------------------------------------------------------------------------------
+
+class Buzzy3                         //allows motor to vibrate on/off while the loop runs w/o delays
+                                     //this class version only blinks the NeoPixel when the motor is running
+{
+  // class member variables
+  // these are initialized at startup
+  int buzzyPin;                     // the number of the buzzy motor pin
+  long OnTime;                      // milliseconds of on-time
+  long OffTime;                     // milliseconds of off-time
+
+  //these mantain the current state
+  int buzzyState;                   //buzzyState used to set the motor
+  unsigned long previousMillis;     //will store the last time Buzzy was updated
+  
+  // constructor - creates a Buzzy
+  // and initializes the member variables and state
+  public:
+  Buzzy3(int pin, long on, long off)
+  {
+    buzzyPin = pin;
+    pinMode(buzzyPin, OUTPUT);
+
+    OnTime = on;
+    OffTime = off;
+
+    buzzyState = LOW;
+    previousMillis = 0;
+  }
+
+  void Update()
+  {
+    // check to see if it is time to change the state of the Buzzy
+    unsigned long currentMillis = millis();
+    
+    if ((buzzyState == HIGH) && (currentMillis - previousMillis >= OnTime))
+    {
+      buzzyState = LOW;                     // turn off the buzzy
+      previousMillis = currentMillis;       // remember the time
+      writeEasyNeoPixel(0, LOW);             // turn off the neopixel
+      digitalWrite(buzzyPin, buzzyState);   // update the buzzy
+    }
+
+    else if ((buzzyState == LOW) && (currentMillis - previousMillis >= OffTime))
+    {
+      buzzyState = HIGH;                    // turn on the buzzy
+      previousMillis = currentMillis;       // remember the time
+      strip.setPixelColor(0,150,0,0);       // makes the NeoPixel "red"
       strip.show();                         // turns on the NeoPixel
       digitalWrite(buzzyPin, buzzyState);   // update the buzzy
     }
@@ -177,7 +234,8 @@ class Buzzy2                         //allows motor to vibrate on/off while the 
 };  // end class definition
 
 
-//------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
+
 
 // constants won't change
 // use to set pin numbers
@@ -196,17 +254,19 @@ long debounceDelay = 100;                 // the debounce time; increase if the 
 
 unsigned long timeout1 = 5000;            // timeout after (milliseconds)
 unsigned long timeout2 = 30000;
+unsigned long timeout3 = 5900;
 unsigned long start;                      // used as the "start" for the timer
 
 // measure the battery voltage
 float measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
 
-//------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 
 Buzzy motor1(5,200,100, measuredvbat);                   //sets motor pin to "5" with "on" and "off" times (milliseconds)
 Buzzy2 motor2(5,100,1900, measuredvbat);
+Buzzy3 motor3(5,1000,1000);
 
-//------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 
 void setup() 
 {
@@ -219,9 +279,11 @@ void setup()
 
   setupEasyNeoPixels(8, 1);
 
+  //LowPower.attachInterruptWakeup(buttonPin, loop, CHANGE);
+
 } // close setup
 
-//-------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 
 void loop() 
 {
@@ -237,8 +299,9 @@ void loop()
     // reset the debouncing timer
     lastDebounceTime = millis();
     measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
-    motor1.BatteryCheck(measuredvbat); //updates the battery in mode 1
-    motor2.BatteryCheck(measuredvbat); //updates the battery in mode 2
+    
+    motor1.BatteryCheck(measuredvbat);
+    motor2.BatteryCheck(measuredvbat);
     
       // toggles the systemState variable each time the button is pressed 
       if (buttonState == LOW) 
@@ -258,24 +321,34 @@ void loop()
   unsigned long now = millis();           // checks the time "now" in the loop
   unsigned long elapsed1 = now - start;    // updates the elapsed time for the timer
   unsigned long elapsed2 = now - start;
-  
+
   if (systemState == HIGH)
   {
     // runs the buzzy
 
-    if(elapsed1 < timeout1)
-    {
-      motor1.Update();
+    if (measuredvbat < 4) {                   //
+      if(elapsed1 < timeout3){
+        digitalWrite(5, LOW);                  // turn off the motor
+        motor3.Update();                       // blinks the neopixel 3x
+      }
+      else {
+        systemState = LOW;
+      }
     }
-    else if(elapsed2 < timeout2)
-    {
-      motor2.Update();
-    }
-
-    else
-    {
-      //toggle systemState (timeout)
-      systemState = LOW;                          
+    else{
+      if(elapsed1 < timeout1)
+      {
+        motor1.Update();
+      }
+      else if(elapsed2 < timeout2)
+      {
+        motor2.Update();
+      }
+      else
+      {
+        //toggle systemState (timeout)
+        systemState = LOW;                          
+      }
     }
   }
 
@@ -284,6 +357,7 @@ void loop()
     // turns off the buzzy
     digitalWrite(5, LOW);                  // turn off the motor
     writeEasyNeoPixel(0, LOW);             // turn off the neopixel
+    //LowPower.sleep();                      // low power mode
   }
   
     
@@ -296,5 +370,5 @@ void loop()
 
 } // end loop
 
-//--------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------
 //end program
