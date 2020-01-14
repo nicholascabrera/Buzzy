@@ -3,7 +3,7 @@
  * "Buzzy" Program
  * version: 3.41
  * author: C P Althoff, Ethan Leigh, Nicholas Cabrera, Colette Guy
- * today's date: 014-Jan-2020
+ * today's date: 002-Jan-2020
  * 
  * board: Adafruit Feather M0 Express
  * 
@@ -360,6 +360,9 @@ void loop()
     //LowPower.sleep();                      // low power mode
   }
   
+  if(elapsed > timeout1+timeout2+1){
+    LowPower.sleep();
+  }
     
   //digitalWrite(ledPin, systemState);    //set the LED using the systemState
 
