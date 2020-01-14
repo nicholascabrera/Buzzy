@@ -363,17 +363,13 @@ void loop()
   if(elapsed > timeout1+timeout2+1){
     LowPower.sleep();
   }
-    
-  //digitalWrite(ledPin, systemState);    //set the LED using the systemState
-
 
   // save the reading.  Next time through the loop,
   // it'll be the lastButtonState:
   lastButtonState = reading;
 } // end loop
 
-void repInc(){
-}
+void repInc(){}
 
 //----------------------------------------------------------------------------------------------------
 //end program
