@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------------
  * "Buzzy" Program
- * version: 3.32
+ * version: 3.34
  * author: C P Althoff, Ethan Leigh, Nicholas Cabrera, Colette Guy
  * today's date: 002-Jan-2020
  * 
@@ -12,7 +12,7 @@
 
 #include <Adafruit_NeoPixel.h>
 #include <EasyNeoPixels.h>
-//#include <ArduinoLowPower.h>
+#include <ArduinoLowPower.h>
 
 
 // Which pin on the Arduino is connected to the NeoPixels?
@@ -279,7 +279,7 @@ void setup()
 
   setupEasyNeoPixels(8, 1);
 
-  //LowPower.attachInterruptWakeup(buttonPin, loop, CHANGE);
+  LowPower.attachInterruptWakeup(buttonPin, repInc, CHANGE);
 
 } // close setup
 
@@ -319,15 +319,15 @@ void loop()
   }
  
   unsigned long now = millis();           // checks the time "now" in the loop
-  unsigned long elapsed1 = now - start;    // updates the elapsed time for the timer
-  unsigned long elapsed2 = now - start;
+  volatile long elapsed = now - start;    // updates the elapsed time for the timer
+  
 
   if (systemState == HIGH)
   {
     // runs the buzzy
 
-    if (measuredvbat < 4) {                   //
-      if(elapsed1 < timeout3){
+    if (measuredvbat < 3.3) {                   //
+      if(elapsed < timeout3){
         digitalWrite(5, LOW);                  // turn off the motor
         motor3.Update();                       // blinks the neopixel 3x
       }
@@ -336,11 +336,11 @@ void loop()
       }
     }
     else{
-      if(elapsed1 < timeout1)
+      if(elapsed < timeout1)
       {
         motor1.Update();
       }
-      else if(elapsed2 < timeout2)
+      else if(elapsed < timeout2)
       {
         motor2.Update();
       }
@@ -367,8 +367,10 @@ void loop()
   // save the reading.  Next time through the loop,
   // it'll be the lastButtonState:
   lastButtonState = reading;
-
 } // end loop
+
+void repInc(){
+}
 
 //----------------------------------------------------------------------------------------------------
 //end program
