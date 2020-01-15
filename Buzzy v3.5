@@ -1,7 +1,7 @@
 /*
  * -----------------------------------------------------------------------
  * "Buzzy" Program
- * version: 3.41
+ * version: 3.5
  * author: C P Althoff, Ethan Leigh, Nicholas Cabrera, Colette Guy
  * today's date: 002-Jan-2020
  * 
@@ -259,6 +259,8 @@ unsigned long start;                      // used as the "start" for the timer
 
 // measure the battery voltage
 float measuredvbat = (analogRead(VBATPIN) * 6.6) / 1024;  // measure the battery voltage
+//elapsed time, volatile because it is being changed outside of the loop method
+volatile long elapsed;
 
 //----------------------------------------------------------------------------------------------------
 
@@ -272,14 +274,15 @@ void setup()
 {
   pinMode(buttonPin, INPUT_PULLUP);
   pinMode(ledPin, OUTPUT);
+  
+  //the interrupt to wake the buzzy up from sleep
+  LowPower.attachInterruptWakeup(buttonPin, elapseReset, CHANGE);
 
   strip.begin();
   strip.setBrightness(255);
   strip.show();
 
   setupEasyNeoPixels(8, 1);
-
-  LowPower.attachInterruptWakeup(buttonPin, repInc, CHANGE);
 
 } // close setup
 
@@ -319,7 +322,7 @@ void loop()
   }
  
   unsigned long now = millis();           // checks the time "now" in the loop
-  volatile long elapsed = now - start;    // updates the elapsed time for the timer
+  elapsed = now - start;    // updates the elapsed time for the timer
   
 
   if (systemState == HIGH)
@@ -357,11 +360,10 @@ void loop()
     // turns off the buzzy
     digitalWrite(5, LOW);                  // turn off the motor
     writeEasyNeoPixel(0, LOW);             // turn off the neopixel
-    //LowPower.sleep();                      // low power mode
   }
   
   if(elapsed > timeout1+timeout2+1){
-    LowPower.sleep();
+    LowPower.deepSleep(); //reduces power drastically, slower wake-up time in exchange for less power consumed when idle
   }
 
   // save the reading.  Next time through the loop,
@@ -369,7 +371,14 @@ void loop()
   lastButtonState = reading;
 } // end loop
 
-void repInc(){}
+void elapseReset(){ //must press twice to wake up
+//When the interrupt occurs, it resets the elapsed time to zero, 
+//and turns the buzzy on by reseting the button state to low
+    if(elapsed > timeout1+timeout2+1){
+      elapsed = 0;
+      buttonState = LOW;
+    }
+  }
 
 //----------------------------------------------------------------------------------------------------
 //end program
